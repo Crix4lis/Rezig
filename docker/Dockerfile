@@ -12,27 +12,30 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && chmod 755 /usr/local/bin/composer
 
 RUN apt-get update \
-    && apt-get install -y wget \
+    && apt-get install -y vim git-all wget\
     && wget https://get.symfony.com/cli/installer -O - | bash \
     && mv /root/.symfony/bin/symfony /usr/local/bin/symfony \
-    && apt-get install -y vim \
-    && apt-get install -y git-all
+    && apt-get install libssl-dev zip unzip
 
 # install and enable extension
-RUN pecl install xdebug-2.9.4 \
+RUN pecl install xdebug-2.9.4 mongodb\
     && docker-php-ext-enable xdebug \
-    && docker-php-ext-install pcntl
-#    && docker-php-ext-enable pcntl
-#     \
-#    && docker-php-ext-install zip
+    && docker-php-ext-install pcntl \
+    && docker-php-ext-enable mongodb
+
+# Configure php and extensions
+COPY config/php.ini-development.ini /usr/local/etc/php/php.ini
+COPY config/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+#RUN apt-get install php-pear
+#RUN pecl config-set php_ini /etc/php.ini
+RUN pecl config-set php_ini /usr/local/etc/php/php.ini
 
 # Configure bash and aliases
 COPY bash/bashrc /home/dockeruser/.bashrc
 COPY bash/bash_aliases /home/dockeruser/.bash_aliases
-# Configure php and extensions
-COPY config/xdebug.ini /usr/local/lib/php/extensions/no-debug-non-zts-20170718/xdebug.so
 
-# Configure xDebug server
+# Configure xDebug server for php cli
 ENV PHP_IDE_CONFIG "serverName=docker-xdebug-server"
 
 # Create volume and default dir
